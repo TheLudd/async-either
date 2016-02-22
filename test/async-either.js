@@ -1,4 +1,5 @@
 import Async from '..'
+import Either from 'data.either'
 import { should } from 'chai'
 should()
 
@@ -64,6 +65,23 @@ describe('AsyncEither', function () {
 
     it('should not apply its value to the input if it is a left', function () {
       assertLeftVal('someValue', Async.Left('someValue').ap(Async.of(1)))
+    })
+
+    it('should run the two futures in parallel', function (done) {
+      this.timeout(60)
+      const incBy = (x) => (y) => x + y
+      const delayAsync = (time, val) =>
+        new Async(function (resolve) {
+          setTimeout(function () {
+            resolve(Either.of(val))
+          }, time)
+        })
+      const a = delayAsync(40, 5).map(incBy)
+      const b = delayAsync(40, 10)
+      a.ap(b).run(function (e) {
+        e.value.should.equal(15)
+        done()
+      })
     })
   })
 
