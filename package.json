@@ -1,0 +1,33 @@
+{
+  "name": "async-either",
+  "version": "1.0.0",
+  "description": "Experimental version of Future",
+  "main": "lib/async-either",
+  "scripts": {
+    "test": "mocha --compilers js:babel/register"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheLudd/async-either.git"
+  },
+  "keywords": [
+    "fantsy-land"
+  ],
+  "author": "Ludwig Magnusson",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/TheLudd/async-either/issues"
+  },
+  "homepage": "https://github.com/TheLudd/async-either#readme",
+  "dependencies": {
+    "data.either": "^1.3.0"
+  },
+  "devDependencies": {
+    "babel": "^5.8.35",
+    "chai": "^3.5.0",
+    "mocha": "^2.4.5"
+  },
+  "standard": {
+    "env": "mocha"
+  }
+}
