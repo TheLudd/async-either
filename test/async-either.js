@@ -3,18 +3,23 @@ import Either from 'data.either'
 import { should } from 'chai'
 should()
 
-function assertRightVal (expected, a) {
+function runAsserter (correctType, incorrectType, typeProp, expected, a) {
+  let didRun = false
   a.run(function (e) {
-    e.isRight.should.equal(true, 'Expected right but received left')
+    didRun.should.equal(false, 'run was called more than once')
+    didRun = true
+    e[typeProp].should.equal(true, 'Expected ' + correctType + ' but received ' + incorrectType)
     e.value.should.equal(expected)
   })
+  didRun.should.equal(true)
+}
+
+function assertRightVal (expected, a) {
+  runAsserter('right', 'left', 'isRight', expected, a)
 }
 
 function assertLeftVal (expected, a) {
-  a.run(function (e) {
-    e.isLeft.should.equal(true, 'Expected left but received right')
-    e.value.should.equal(expected)
-  })
+  runAsserter('left', 'right', 'isLeft', expected, a)
 }
 
 describe('AsyncEither', function () {
@@ -25,7 +30,7 @@ describe('AsyncEither', function () {
     function markExecuted () {
       executed = true
     }
-    new Async(function (resolve) {
+    Async(function (resolve) {
       resolve()
     }).run(markExecuted)
     executed.should.equal(true)
@@ -55,6 +60,12 @@ describe('AsyncEither', function () {
   })
 
   describe('#ap', function () {
+    const delayAsync = (time, val) => Async(function (resolve) {
+      setTimeout(function () {
+        resolve(Either.of(val))
+      }, time)
+    })
+
     it('should apply its function to the value contained in the input', function () {
       assertRightVal(20, Async.of(inc).ap(Async.of(19)))
     })
@@ -67,21 +78,31 @@ describe('AsyncEither', function () {
       assertLeftVal('someValue', Async.Left('someValue').ap(Async.of(1)))
     })
 
-    it('should run the two futures in parallel', function (done) {
+    it('should run the two asyncs in parallel', function (done) {
       this.timeout(60)
       const incBy = (x) => (y) => x + y
-      const delayAsync = (time, val) =>
-        new Async(function (resolve) {
-          setTimeout(function () {
-            resolve(Either.of(val))
-          }, time)
-        })
       const a = delayAsync(40, 5).map(incBy)
       const b = delayAsync(40, 10)
       a.ap(b).run(function (e) {
         e.value.should.equal(15)
         done()
       })
+    })
+
+    it('should finish early if the first async is left', function () {
+      const a = Async.Left('someValue')
+      const b = delayAsync(2000, 'someOtherValue')
+      assertLeftVal('someValue', a.ap(b))
+    })
+
+    it('should finish early if the seconf async is left', function () {
+      const a = delayAsync(2000, 'someOtherValue')
+      const b = Async.Left('someValue')
+      assertLeftVal('someValue', a.ap(b))
+    })
+
+    it('should only resolve the first left if both are left', function () {
+      assertLeftVal('someValue', Async.Left('someValue').ap(Async.Left('someOtherValue')))
     })
   })
 

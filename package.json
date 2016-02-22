@@ -4,7 +4,7 @@
   "description": "Experimental version of Future",
   "main": "lib/async-either",
   "scripts": {
-    "test": "mocha --compilers js:babel/register"
+    "test": "mocha --compilers js:babel/register --no-exit"
   },
   "repository": {
     "type": "git",
